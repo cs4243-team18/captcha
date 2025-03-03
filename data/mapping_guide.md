@@ -1,6 +1,6 @@
 # Similar char mapping rules (pls add on if yall spot anything new lel thanks)
 
-- 1, i, I, l, L: 1 got the thing on top, i must have the dot, I if got the line on top and below is caps i which we classify as i, else is lowercase l, L must have the protrusion at bottom which we also classify as lowercase l
+- 1, i, I, l, L: 1 got the thing on top, i must have the dot. For I, if got the line on top and below is capital letter i which we classify as lowercase i, else is lowercase l, uppercase L must have the protrusion at bottom which we also classify as lowercase l
 
 - 0, o, O: skinny oval means digit, fat oval / almost round means o
 
