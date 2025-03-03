@@ -4,6 +4,8 @@
 
 - 0, o, O: skinny oval means digit, fat oval / almost round means o
 
+- 0 with diagonal lines incide the oval will be counted as 0 instead of 8
+
 # Dirty images (remove from dataset)
 
 - Missing characters or random icons
