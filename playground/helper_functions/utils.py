@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import random
 from matplotlib import pyplot as plt
 
@@ -38,3 +39,12 @@ def imshow(img, title, subplot=None):
 
 def imshow_bulk(img, title, plot):
     plot.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), plot.set_title(title)
+
+def get_combined_char_imgs(char_imgs):
+    # Add space in between char imgs, then hstack them together
+    char_imgs_with_spacing = []
+    for char_img in char_imgs:
+        char_imgs_with_spacing.append(char_img)
+        spacing = np.ones_like(char_img) * 255
+        char_imgs_with_spacing.append(spacing)
+    return np.hstack(char_imgs_with_spacing)
