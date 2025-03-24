@@ -48,3 +48,8 @@ def get_combined_char_imgs(char_imgs):
         spacing = np.ones_like(char_img) * 255
         char_imgs_with_spacing.append(spacing)
     return np.hstack(char_imgs_with_spacing)
+
+
+"""
+Evaluation functions
+"""

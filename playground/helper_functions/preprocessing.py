@@ -15,7 +15,7 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
 """
-FINAL DENOISING METHOD: replace black with median
+Denoising methods
 """
 
 def replace_black_with_median(image, kernel_size=5):
@@ -26,7 +26,6 @@ def replace_black_with_median(image, kernel_size=5):
     :param kernel_size: Size of the patch used for computing the median
     :return: Image with black pixels replaced by median values
     """
-    # Convert to grayscale if the image is colored
     is_color = len(image.shape) == 3
     
     # Define black pixel condition
@@ -49,6 +48,11 @@ Salt and pepper filter
 def remove_salt_and_pepper_noise(image, kernel_size):
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+
+def remove_salt_and_pepper_noise(image, kernel_size):
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+
 
 """
 Binarization methods
