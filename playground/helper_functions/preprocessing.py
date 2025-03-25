@@ -1,18 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import os
-import random
-import tensorflow as tf
-from tensorflow.keras import layers, models, Input, Model
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.utils import to_categorical
-import string
-from tqdm import tqdm
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler
 
 """
 FINAL DENOISING METHOD: replace black with median
@@ -46,7 +33,7 @@ def replace_black_with_median(image, kernel_size=5):
 """
 Salt and pepper filter
 """
-def remove_salt_and_pepper_noise(image, kernel_size):
+def remove_salt_and_pepper_noise(image, kernel_size = 1):
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
 
@@ -80,3 +67,13 @@ def binarization_max_contrast(img):
     return binarized
 
 
+def preprocess_image(image):
+    """
+    Preprocesses image before use for image segmentation
+    """
+    denoised_image = replace_black_with_median(image.copy())
+    denoised_image = remove_salt_and_pepper_noise(denoised_image)
+    return binarization_max_contrast(denoised_image)
+    
+    
+    

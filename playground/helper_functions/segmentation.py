@@ -1,18 +1,5 @@
-import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import os
-import random
-import tensorflow as tf
-from tensorflow.keras import layers, models, Input, Model
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.utils import to_categorical
-import string
-from tqdm import tqdm
-import pandas as pd
-from sklearn.metrics import classification_report, confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler
+
 
 def segment_captcha_with_projection(image, projection_threshold):
     vertical_projection = np.sum(image, axis=0)
