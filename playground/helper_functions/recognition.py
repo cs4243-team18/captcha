@@ -1,8 +1,72 @@
-class BaseCNN_V1:
-    
+import torch
+import torchvision.models as models
+import torch.nn as nn
+import torch.optim as optim
+
+from .encode import IMG_HEIGHT, IMG_WIDTH, CHARACTERS
 
 
 
+class HybridResNet50(nn.Module):
+    def __init__(self, input_size = (IMG_HEIGHT, IMG_WIDTH), output_size = len(CHARACTERS), pretrained_weights='IMAGENET1K_V1'):
+        super(HybridResNet50, self).__init__()
+
+        # Initialize ResNet50 with pretrained weights (optional)
+        self.resnet = models.resnet50(weights=pretrained_weights)
+
+        # Modify output layer
+        num_ftrs = self.resnet.fc.in_features  # Get the number of input features to the FC layer
+        self.resnet.fc = nn.Linear(num_ftrs, output_size)  # Replace FC layer with 128 output units
+
+        # Modify first conv layer
+        self.resnet.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
+ 
+    def forward(self, x):
+        return self.resnet(x)
+
+    def train_model(self, train_loader, num_epochs=5):
+        self.train()  # Set to training mode
+
+        # Define loss function and optimizer
+        criterion = nn.CrossEntropyLoss()  # For multi-class classification
+        optimizer = optim.Adam(self.parameters(), lr=0.001)  # Adam optimizer
+
+        for epoch in range(num_epochs):
+            running_loss = 0.0
+            for images, labels in train_loader:
+                optimizer.zero_grad()  # Zero the gradients for the optimizer
+                outputs = self(images)  # Forward pass
+                loss = criterion(outputs, labels)  # Compute the loss
+                loss.backward()  # Backpropagate the loss
+                optimizer.step()  # Update the model parameters
+
+                running_loss += loss.item()  # Accumulate the loss
+
+            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}")
+
+        print("Training complete!")
+
+    def evaluate(self, test_loader):
+        self.eval()  # Set to evaluation mode
+        
+        correct = 0
+        total = 0
+        running_loss = 0.0
+        criterion = nn.CrossEntropyLoss()
+
+        with torch.no_grad():  # No need to track gradients during evaluation
+            for images, labels in test_loader:
+                outputs = self(images)  # Forward pass
+                loss = criterion(outputs, labels)  # Compute the loss
+                running_loss += loss.item()  # Accumulate the loss
+
+                # Get the predicted class
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+        print(f"Test Loss: {running_loss/len(test_loader):.4f}")
+        print(f"Accuracy: {100 * correct / total:.2f}%")
 
 # # Import packages
 # import pandas as pd
