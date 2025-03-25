@@ -36,11 +36,6 @@ def remove_salt_and_pepper_noise(image, kernel_size = 1):
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
 
-def remove_salt_and_pepper_noise(image, kernel_size):
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
-
-
 """
 Binarization methods
 """
