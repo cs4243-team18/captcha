@@ -92,7 +92,7 @@ def prepare_training_data(folder_path):
     feature_names = list(features_df.columns)
 
     # Reshape for CNN input
-    X_img = X_img.reshape(X_img.shape[0], IMG_HEIGHT, IMG_WIDTH, 1)
+    X_img = np.expand_dims(X_img, 1)
     X_img = X_img / 255.0  # Normalize
 
     # One-hot encode labels
@@ -102,5 +102,10 @@ def prepare_training_data(folder_path):
     scaler = StandardScaler()
     X_features_scaled = None
     X_features_scaled = scaler.fit_transform(X_features)
+<<<<<<< HEAD
+    
+    return X_img.astype(np.float32), X_features_scaled, y_one_hot, feature_names, scaler # Convert to float for pytorch
+=======
 
     return X_img, X_features_scaled, y_one_hot, feature_names, scaler
+>>>>>>> c142f1f9e25ac4ba01a2f403b60c86b94fe60b34
