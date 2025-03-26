@@ -1,12 +1,20 @@
 # Package management
 
 - To prevent errors caused by incompatible python packages, standardise all versions by using the same virtual environment as specified by `requirements.txt`
-- To do so, run the following in the root directory:
+- First, ensure you have Python 3.10.1 installed and that this is the root version (as the venv will be created based on this python version later)
+- Then run the following in the root directory:
 
-```python3
+```shell
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+- To exit venv, run
+
+```shell
+deactivate
 ```
 
 # Poster
