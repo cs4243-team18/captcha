@@ -1,3 +1,14 @@
+# Package management
+
+- To prevent errors caused by incompatible python packages, standardise all versions by using the same virtual environment as specified by `requirements.txt`
+- To do so, run the following in the root directory:
+
+```python3
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+```
+
 # Poster
 
 Link: https://www.canva.com/design/DAGh2Wd0fYk/mDj0Nnjm045wxwGvwsSGjQ/edit?utm_content=DAGh2Wd0fYk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
