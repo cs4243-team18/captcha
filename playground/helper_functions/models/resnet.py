@@ -3,7 +3,7 @@ import torchvision.models as models
 import torch.nn as nn
 import torch.optim as optim
 
-from .encode import IMG_HEIGHT, IMG_WIDTH, CHARACTERS
+from ..encode import IMG_HEIGHT, IMG_WIDTH, CHARACTERS
 
 
 
