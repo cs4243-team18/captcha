@@ -9,17 +9,7 @@ Image loading functions
 """
 
 def get_png_filepaths(train_imgs_dir):
-    png_files = []
-    
-    # Now use this absolute path
-    subdirs = [os.path.join(train_imgs_dir, d) for d in os.listdir(train_imgs_dir)
-               if os.path.isdir(os.path.join(train_imgs_dir, d))]
-    for subdir in subdirs:
-        for filename in os.listdir(subdir):  # List files inside the subdirectory
-            if filename.lower().endswith(".png"):
-                png_files.append(os.path.join(subdir, filename))  # Store full path
-
-    return png_files
+    return [f"{train_imgs_dir}/{file}" for file in os.listdir(train_imgs_dir) if file.endswith('.png')]
 
 
 def get_random_train_img(train_imgs_dir):
