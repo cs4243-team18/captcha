@@ -103,4 +103,4 @@ def prepare_training_data(folder_path):
     X_features_scaled = None
     X_features_scaled = scaler.fit_transform(X_features)
     
-    return X_img.astype(np.float32), X_features_scaled, y_one_hot, feature_names, scaler # Convert to float for pytorch
+    return X_img.astype(np.float32), X_features_scaled.astype(np.float32), y_one_hot, feature_names, scaler # Convert to float for pytorch

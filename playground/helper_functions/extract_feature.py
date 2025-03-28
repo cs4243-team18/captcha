@@ -4,6 +4,8 @@ import cv2
 """
 Extract feature vector
 """
+NUM_ENGINEERED_FEATURES = 9
+
 def extract_features(char_image):
     IMG_HEIGHT = 40
     IMG_WIDTH = 30
