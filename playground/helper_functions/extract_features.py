@@ -4,13 +4,7 @@ import cv2
 """
 Extract feature vector
 """
-def extract_features(char_image):
-    IMG_HEIGHT = 40
-    IMG_WIDTH = 30
-    
-    # Resize to standard size
-    char_image_resized = cv2.resize(char_image, (IMG_WIDTH, IMG_HEIGHT))
-    
+def extract_features(char_image: np.ndarray) -> dict:
     # Extract features
     features = {}
     
@@ -49,4 +43,4 @@ def extract_features(char_image):
         features['com_x'] = 0.5
         features['com_y'] = 0.5
     
-    return features, char_image_resized
+    return features

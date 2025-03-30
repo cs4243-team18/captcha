@@ -1,17 +1,27 @@
 import cv2
 import numpy as np
 
+
 """
-Denoising methods
+Preprocessing methods for Phase 1 of the pipeline.
+
+Note: [Private] methods refer to internal helper functions that stay within this package, while [Public] methods 
+are the ones meant to be exported for use by other packages.
 """
 
-def replace_black_with_median(image, kernel_size=5):
+
+"""
+[Private] Denoising methods
+"""
+def replace_black_with_median(image: np.ndarray, kernel_size=5) -> np.ndarray:
     """
     Replaces all black pixels in an image with the median of their local neighborhood.
     
-    :param image: Input image (grayscale or color)
-    :param kernel_size: Size of the patch used for computing the median
-    :return: Image with black pixels replaced by median values
+    Parameters:
+        image: Input image (grayscale or color)
+        kernel_size: Size of the patch used for computing the median
+    Returns:
+        denoised_image: Image with black pixels replaced by median values
     """
     is_color = len(image.shape) == 3
     
@@ -29,27 +39,26 @@ def replace_black_with_median(image, kernel_size=5):
 
     return image
 
-"""
-Salt and pepper filter
-"""
-def remove_salt_and_pepper_noise(image, kernel_size = 1):
+
+def remove_salt_and_pepper_noise_by_morphology(image: np.ndarray, kernel_size = 1) -> np.ndarray:
     kernel = np.ones((kernel_size, kernel_size), np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
 
+
 """
-Binarization methods
+[Private] Binarization methods
 """
-def binarization_max_contrast(img):
+def binarization_max_contrast(image: np.ndarray) -> np.ndarray:
     """
     To prevent missing out on text characters which are too bright or light-colored, compare
     grayscale, HSV Value (V) channel, and LAB Lightness (L) channel to pick the best channel
     for binarization.
     """
     # Get grayscale, HSV V, and LAB L channels
-    grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     v_channel = hsv[:, :, 2]
-    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l_channel = lab[:, :, 0]
 
     # Pick the best channel dynamically (whichever has the highest variance)
@@ -66,13 +75,22 @@ def binarization_max_contrast(img):
     return binarized
 
 
-def preprocess_image(image):
+"""
+[Public] Preprocessing methods (using a mix and match of various denoising and binarization methods)
+"""
+def preprocess_image_v1(image: np.ndarray) -> np.ndarray:
     """
-    Preprocesses image before use for image segmentation
+    Applies black pixel median filtering, salt and pepper removal, then max contrast binarization.
     """
     denoised_image = replace_black_with_median(image.copy())
-    denoised_image = remove_salt_and_pepper_noise(denoised_image)
+    denoised_image = remove_salt_and_pepper_noise_by_morphology(denoised_image)
     return binarization_max_contrast(denoised_image)
-    
+
+
+def preprocess_image_v2(image: np.ndarray) -> np.ndarray:
+    """
+    Applies black pixel median filtering, salt and pepper removal, then <some other binarization method>.
+    """
+    pass
     
     

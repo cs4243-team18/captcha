@@ -2,12 +2,21 @@ import numpy as np
 
 from typing import List
 
-def get_segmented_characters_with_vertical_projection(binarised_imgs: list) -> List[list]:
+"""
+Segmentation methods for Phase 2 of the pipeline
+"""
+
+
+"""
+[Public] Segmentation methods by projection
+"""
+def segment_by_projection_v1(binarised_imgs: list[np.ndarray]) -> List[list[np.ndarray]]:
     """
     Given a list of binarised images, return a list of segmented characters for each binarised image
     """
     # Compute vertical projection (sum of pixel values along columns)
     vertical_projs = [np.sum(binary, axis=0) for binary in binarised_imgs]
+
     # Identify gap points (valleys where projection value is low), then derive horizontal segments of characters
     thresholds = [np.max(vertical_proj) * 0.05 for vertical_proj in vertical_projs] # Adjust threshold as needed
     all_x_gap_points = [np.where(vertical_proj < threshold)[0] for vertical_proj, threshold in zip(vertical_projs, thresholds)]
@@ -23,6 +32,7 @@ def get_segmented_characters_with_vertical_projection(binarised_imgs: list) -> L
 
     # Compute horizontal projection (sum of pixel values along rows) to trim the vertical axis
     horizontal_projs = [np.sum(binary, axis=1) for binary in binarised_imgs]
+
     # Find min_y and max_y for each image
     all_y_bounds = []
     for horizontal_proj in horizontal_projs:
@@ -45,28 +55,30 @@ def get_segmented_characters_with_vertical_projection(binarised_imgs: list) -> L
     
     return all_char_images_vert_proj
 
-# Segmentation using vertical projection
-def segment_captcha_with_projection(image, projection_threshold=0.1):
+
+def segment_by_projection_v2(image: np.ndarray, projection_threshold=0.1) -> list[tuple[int, int]]:
     vertical_projection = np.sum(image, axis=0)
     max_projection = vertical_projection.max()
     if max_projection != 0:
         vertical_projection = vertical_projection / max_projection
 
     projection_binary = vertical_projection > projection_threshold
+    x_len = len(projection_binary)
 
     character_boundaries = []
     start_idx = None
-    for i in range(1, len(projection_binary)):
-        if projection_binary[i] != projection_binary[i - 1]:
-            if projection_binary[i] == 1:
-                start_idx = i
-            elif projection_binary[i] == 0 and start_idx is not None:
-                end_idx = i
-                character_boundaries.append((start_idx, end_idx))
-                start_idx = None
+    for i in range(1, x_len):
+        if projection_binary[i] == projection_binary[i-1]:
+            continue
+        if projection_binary[i] == 1:
+            start_idx = i
+        elif projection_binary[i] == 0 and start_idx is not None:
+            end_idx = i
+            character_boundaries.append((start_idx, end_idx))
+            start_idx = None
     
     # Handle the case where the last character extends to the end
     if start_idx is not None:
-        character_boundaries.append((start_idx, len(projection_binary)))
+        character_boundaries.append((start_idx, x_len))
     
-    return character_boundaries, vertical_projection, projection_binary
+    return character_boundaries
