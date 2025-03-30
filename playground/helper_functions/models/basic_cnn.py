@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
-from .segmentation import segment_by_projection_v2
-from .preprocessing import preprocess_image_v1
-from .data_transformation import CHARACTERS, PROJECTION_THRESHOLD
+from helper_functions.segmentation import segment_by_projection_v2
+from helper_functions.preprocessing import preprocess_image_v1
+from helper_functions.data_transformation import CHARACTERS, PROJECTION_THRESHOLD
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import cv2
 import os
