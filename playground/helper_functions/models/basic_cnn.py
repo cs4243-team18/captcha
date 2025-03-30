@@ -1,15 +1,15 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
+from helper_functions.segmentation import segment_by_projection_v2
+from helper_functions.preprocessing import preprocess_image_v1
+from helper_functions.data_transformation import CHARACTERS, PROJECTION_THRESHOLD
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from helper_functions.encode import (
-    CHARACTERS, 
-    segment_captcha_with_projection, preprocess_image,
-    PROJECTION_THRESHOLD, IMG_HEIGHT, IMG_WIDTH
-)
 import cv2
 import os
 from tqdm import tqdm
+
+IMG_HEIGHT, IMG_WIDTH = 40, 30
 
 # Custom Dataset Class
 class CharDataset(Dataset):
@@ -75,8 +75,8 @@ def evaluate_captcha_level(model, folder_path, device):
         
         # Preprocess and segment
         image = cv2.imread(image_path)
-        thresh = preprocess_image(image)
-        boundaries, _, _ = segment_captcha_with_projection(thresh, PROJECTION_THRESHOLD)
+        thresh = preprocess_image_v1(image)
+        boundaries, _, _ = segment_by_projection_v2(thresh, PROJECTION_THRESHOLD)
         
         if len(boundaries) != len(correct_label):
             total += 1
