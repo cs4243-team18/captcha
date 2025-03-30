@@ -14,7 +14,8 @@ IMG_HEIGHT, IMG_WIDTH = 40, 30
 # Custom Dataset Class
 class CharDataset(Dataset):
     def __init__(self, X_img, y):
-        self.X = torch.tensor(X_img, dtype=torch.float32).permute(0, 3, 1, 2)  # NHWC -> NCHW
+        # Input is already in NCHW format (N,1,40,30)
+        self.X = torch.tensor(X_img, dtype=torch.float32)  # Remove .permute()
         self.y = y
 
     def __len__(self):
