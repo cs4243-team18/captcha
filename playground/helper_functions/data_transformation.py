@@ -24,6 +24,8 @@ labels.
 
 CHARACTERS = string.ascii_lowercase + string.digits
 PROJECTION_THRESHOLD = 0.1
+IMG_HEIGHT = 40
+IMG_WIDTH = 30
 
 
 """
@@ -36,8 +38,6 @@ def to_categorical(y: list, num_classes) -> np.ndarray:
     return F.one_hot(y, num_classes=num_classes).numpy()  # Convert to numpy
 
 def get_resized_img(char_image: np.ndarray) -> np.ndarray:
-    IMG_HEIGHT = 40
-    IMG_WIDTH = 30
     return cv2.resize(char_image, (IMG_WIDTH, IMG_HEIGHT))
 
 """
@@ -111,6 +111,6 @@ def get_transformed_data(folder_path):
     feature_values = features_df.values
 
     scaler = StandardScaler()
-    X_feature_vectors = scaler.fit_transform(feature_values)
+    X_feature_vectors = scaler.fit_transform(feature_values).astype(np.float32)
     
     return X_imgs, y_one_hot, feature_names, X_feature_vectors, scaler

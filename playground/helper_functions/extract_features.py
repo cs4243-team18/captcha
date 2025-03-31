@@ -4,6 +4,8 @@ import cv2
 """
 Extract feature vector
 """
+NUM_ENGINEERED_FEATURES = 9
+
 def extract_features(char_image: np.ndarray) -> dict:
     # Extract features
     features = {}

@@ -3,8 +3,8 @@ import torchvision.models as models
 import torch.nn as nn
 import torch.optim as optim
 
-from ..encode import IMG_HEIGHT, IMG_WIDTH, CHARACTERS
-from ..extract_feature import NUM_ENGINEERED_FEATURES
+from ..data_transformation import CHARACTERS, IMG_HEIGHT, IMG_WIDTH
+from ..extract_features import NUM_ENGINEERED_FEATURES
 
 class ResNet50(nn.Module):
     def __init__(self, input_size = (IMG_HEIGHT, IMG_WIDTH), output_size = len(CHARACTERS), pretrained_weights='IMAGENET1K_V1'):
