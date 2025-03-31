@@ -8,7 +8,7 @@ from ..extract_features import NUM_ENGINEERED_FEATURES
 
 class ResNet50(nn.Module):
     def __init__(self, input_size = (IMG_HEIGHT, IMG_WIDTH), output_size = len(CHARACTERS), pretrained_weights='IMAGENET1K_V1'):
-        super(HybridResNet50, self).__init__()
+        super(ResNet50, self).__init__()
 
         # Initialize ResNet50 with pretrained weights (optional)
         self.resnet = models.resnet50(weights=pretrained_weights)
@@ -23,7 +23,7 @@ class ResNet50(nn.Module):
     def forward(self, x):
         return self.resnet(x)
 
-    def train_model(self, train_loader, num_epochs=5):
+    def train_model(self, train_loader, num_epochs=100):
         self.train()  # Set to training mode
 
         # Define loss function and optimizer
@@ -103,7 +103,7 @@ class HybridResNet50(nn.Module):
         print(combined_features.shape)
         return self.final_fc(combined_features)
 
-    def train_model(self, train_loader, num_epochs=5):
+    def train_model(self, train_loader, num_epochs=100):
         self.train()  # Set to training mode
 
         # Define loss function and optimizer
@@ -112,7 +112,7 @@ class HybridResNet50(nn.Module):
 
         for epoch in range(num_epochs):
             running_loss = 0.0
-            for images, features, labels in train_loader:
+            for (images, features), labels in train_loader:
                 optimizer.zero_grad()  # Zero the gradients for the optimizer
                 outputs = self(images, features)  # Forward pass
                 loss = criterion(outputs, labels)  # Compute the loss
@@ -134,7 +134,7 @@ class HybridResNet50(nn.Module):
         criterion = nn.CrossEntropyLoss()
 
         with torch.no_grad():  # No need to track gradients during evaluation
-            for images, features, labels in test_loader:
+            for (images, features), labels in test_loader:
                 outputs = self(images, features)  # Forward pass
                 loss = criterion(outputs, labels)  # Compute the loss
                 running_loss += loss.item()  # Accumulate the loss
