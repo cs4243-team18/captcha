@@ -1,6 +1,10 @@
+import cv2
 import numpy as np
-
+import os
 from typing import List
+from tqdm import tqdm
+
+from helper_functions.preprocessing import preprocess_image_v1
 
 """
 Segmentation methods for Phase 2 of the pipeline
@@ -82,3 +86,47 @@ def segment_by_projection_v2(image: np.ndarray, projection_threshold=0.1) -> lis
         character_boundaries.append((start_idx, x_len))
     
     return character_boundaries
+
+"""
+[Public] Segmentation evaluation methods
+"""
+def evaluate_segmentation_accuracy_v1(folder_path):
+    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
+
+    num_failed_segmentations = 0
+
+    for filename in tqdm(filenames, desc="Evaluating Segmentation Accuracy for Vertical Projection V1"):
+        img_path = os.path.join(folder_path, filename)
+        filename_without_suffix = os.path.splitext(filename)[0]
+        correct_characters = filename_without_suffix.split('-')[0]
+
+        image = cv2.imread(img_path)
+        preprocessed_image = preprocess_image_v1(image)
+        char_images = segment_by_projection_v1([preprocessed_image])[0]
+
+        if len(char_images) != len(correct_characters):
+            num_failed_segmentations += 1
+    total_files = len(filenames)
+    total_successful_segmentations = total_files - num_failed_segmentations
+    print(f"V1 accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+
+def evaluate_segmentation_accuracy_v2(folder_path):
+    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
+
+    num_failed_segmentations = 0
+
+    for filename in tqdm(filenames, desc="Evaluating Segmentation Accuracy for Vertical Projection V2"):
+        img_path = os.path.join(folder_path, filename)
+        filename_without_suffix = os.path.splitext(filename)[0]
+        correct_characters = filename_without_suffix.split('-')[0]
+
+        image = cv2.imread(img_path)
+        preprocessed_image = preprocess_image_v1(image)
+        char_images = segment_by_projection_v2(preprocessed_image)
+
+        if len(char_images) != len(correct_characters):
+            num_failed_segmentations += 1
+    
+    total_files = len(filenames)
+    total_successful_segmentations = total_files - num_failed_segmentations
+    print(f"V2accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
