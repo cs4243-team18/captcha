@@ -42,6 +42,7 @@ def evaluate_character_performance(
     f1 = f1_score(y_test, y_pred, average='macro', labels=np.arange(36), zero_division=0)
 
     # Calculate micro performance metrics (i.e. for each of the 36 characters)
+    # TODO
 
 
     character_performance = {
@@ -51,7 +52,8 @@ def evaluate_character_performance(
         'f1_score': f1
     }
 
-    return character_performance
+    print(f"Character level performance (skipping segmentation failures): {json.dumps(character_performance, indent=2)}\n")
+
 
 
 def evaluate_captcha_performance(
