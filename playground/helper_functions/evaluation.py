@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import json
 
 
 """
@@ -19,7 +20,7 @@ def evaluate_character_performance(
     y_test: torch.Tensor
 ) -> dict:
     """
-    Uses the trained CNN model to predict and evaluate its character recognition performance.
+    Uses the trained CNN model to predict and evaluate its character recognition performance, skipping failed segmentations.
     
     Parameters
     X_test: tensor of m testing character images, where each grayscale character image is a normalised matrix 
@@ -57,18 +58,14 @@ def evaluate_captcha_performance(
     trained_model: nn.Module, 
     X_test_captcha: list[torch.Tensor], 
     y_test_captcha: list[torch.Tensor], 
-    num_failed_segmentations: int
-) -> dict:
+    failed_segmentation_info: tuple[int, int]
+) -> tuple[dict, dict]:
     """
-    Similar to above, but for CAPTCHA level performance instead.
+    Similar to above, but for CAPTCHA level performance and includes failed segmentations.
     """
     trained_model.eval()
-    
+
     num_correct_captchas = 0
-    total_captchas = len(X_test_captcha) + num_failed_segmentations
-
-    segmentation_accuracy = len(X_test_captcha) / total_captchas
-
     num_correct_chars = 0
     total_chars = 0
 
@@ -79,9 +76,19 @@ def evaluate_captcha_performance(
         total_chars += len(y_true)
         num_correct_captchas +=  np.all(y_pred == y_true)
 
+    num_failed_segmentations, num_failed_chars = failed_segmentation_info
+    total_captchas = len(X_test_captcha) + num_failed_segmentations
+    total_captchas_skip_SF = len(X_test_captcha)
+    total_chars += num_failed_chars
+
     captcha_performance = {
-        'captcha_accuracy': num_correct_captchas / total_captchas,
-        'character_accuracy': num_correct_chars / total_chars,
-        'segmentation_accuracy': segmentation_accuracy,
+        'segmentation_accuracy': 1 - (num_failed_segmentations / total_captchas),
+        'captcha_accuracy (skipping SF)': num_correct_captchas / total_captchas_skip_SF,
+        'captcha_accuracy (including SF)': num_correct_captchas / total_captchas,
+        'character_accuracy (including SF)': num_correct_chars / total_chars,
     }
-    return captcha_performance
+
+    print(f"Captcha level performance: {json.dumps(captcha_performance, indent=2)}\n")
+    
+
+    
