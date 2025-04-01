@@ -11,7 +11,6 @@ Image loading functions
 def get_png_filepaths(train_imgs_dir):
     return [f"{train_imgs_dir}/{file}" for file in os.listdir(train_imgs_dir) if file.endswith('.png')]
 
-
 def get_random_train_img(train_imgs_dir):
     return cv2.imread(random.choice(get_png_filepaths(train_imgs_dir)))
 
