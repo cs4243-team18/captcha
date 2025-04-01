@@ -2,7 +2,7 @@
 import numpy as np
 import torch
 import torch.nn as nn 
-from typing import TypedDict, List, Tuple
+from typing import TypedDict, Tuple
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import torch
 import numpy as np
@@ -47,7 +47,7 @@ class CNN:
                 nn.Conv2d(in_channels=conv2_in, out_channels=conv2_out, kernel_size=conv_kernel_size),
                 nn.Dropout2d(0.2),
                 nn.MaxPool2d(kernel_size=maxpool_kernel_size),
-                nn.LeakyReLU(lrelu_neg_slope)
+                nn.LeakyReLU(lrelu_neg_slope),
             )
 
             # Classification layers
@@ -61,7 +61,6 @@ class CNN:
                 nn.Dropout(0.3),
                 nn.LeakyReLU(lrelu_neg_slope),
                 nn.Linear(l2_in, l2_out),
-                nn.Softmax(dim=1)
             )
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -80,6 +79,7 @@ class CNN:
             of shape (IMG_HEIGHT, IMG_WIDTH)
         y_train: tensor of n character labels (dneoted by integers)
         """
+        print("Training model...")
         optimiser = torch.optim.Adam(self.model.parameters(), lr=self.cnn_params["learning_rate"])
         loss_fn = nn.CrossEntropyLoss()
         dataset = torch.utils.data.TensorDataset(X_train, y_train)
@@ -115,7 +115,6 @@ class CNN:
         # Convert tensors to numpy arrays for calculations
         y_pred = torch.argmax(self.model(X_test), axis=1).cpu().numpy()
         y_test = y_test.cpu().numpy()
-        print(f"y_pred: {y_pred}, y_test: {y_test}")
 
         # Calculate macro performance metrics
         accuracy = accuracy_score(y_test, y_pred)
@@ -132,27 +131,36 @@ class CNN:
 
         return character_performance
 
-    def evaluate_captcha_performance(self, captcha_X_test, captcha_y_test, num_failed_segmentations) -> dict:
-        captcha_accuracy = len(captcha_X_test) / (len(captcha_X_test) + num_failed_segmentations)
+    def evaluate_captcha_performance(self, X_test_captcha, y_test_captcha, num_failed_segmentations) -> dict:
+        self.model.eval()
+        
+        num_correct_captchas = 0
+        total_captchas = len(X_test_captcha) + num_failed_segmentations
+
+        segmentation_accuracy = len(X_test_captcha) / total_captchas
 
         num_correct_chars = 0
         total_chars = 0
-        for captcha_x, captcha_y in zip(captcha_X_test, captcha_y_test):
+
+        for captcha_x, captcha_y in zip(X_test_captcha, y_test_captcha):
             y_pred = torch.argmax(self.model(captcha_x), axis=1).cpu().numpy()
             y_true = captcha_y.cpu().numpy()
             num_correct_chars += np.sum(y_pred == y_true)
             total_chars += len(y_true)
+            num_correct_captchas +=  np.all(y_pred == y_true)
 
         captcha_performance = {
-            'captcha_accuracy': captcha_accuracy,
-            'character_accuracy': num_correct_chars / total_chars if total_chars > 0 else 0,
+            'captcha_accuracy': num_correct_captchas / total_captchas,
+            'character_accuracy': num_correct_chars / total_chars,
+            'segmentation_accuracy': segmentation_accuracy,
         }
         return captcha_performance
 
 
-
     def save_trained_model(self, model_path: str):
-        torch.save(self.model.state_dict(), model_path)
+        torch.save((self.model.state_dict(), self.epoch_losses), model_path)
     
     def load_trained_model(self, model_path: str):
-        self.model.load_state_dict(torch.load(model_path))
+        model_state_dict, epoch_losses = torch.load(model_path)
+        self.model.load_state_dict(model_state_dict)
+        self.epoch_losses = epoch_losses

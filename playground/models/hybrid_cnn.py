@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from helper_functions.encode import (
+from helper_functions.data_transformation import (
     CHARACTERS,
-    segment_captcha_with_projection, preprocess_image,
+    segment_by_projection_v2,
     PROJECTION_THRESHOLD, IMG_HEIGHT, IMG_WIDTH
 )
-from helper_functions.extract_feature import extract_features
+from helper_functions.preprocessing import preprocess_image_v1
+from helper_functions.extract_features import extract_features
 import cv2
 import os
 from tqdm import tqdm
@@ -93,8 +94,8 @@ def evaluate_captcha_level(model, folder_path, device, scaler, feature_names):
         correct_label = os.path.splitext(filename)[0].split('-')[0]
 
         image = cv2.imread(image_path)
-        thresh = preprocess_image(image)
-        boundaries, _, _ = segment_captcha_with_projection(
+        thresh = preprocess_image_v1(image)
+        boundaries, _, _ = segment_by_projection_v2(
             thresh, PROJECTION_THRESHOLD)
 
         if len(boundaries) != len(correct_label):
