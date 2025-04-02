@@ -101,8 +101,12 @@ class CNN:
 
     def save_trained_model(self, model_path: str):
         torch.save((self.model.state_dict(), self.epoch_losses), model_path)
+        print("Saved trained model to cache.")
     
     def load_trained_model(self, model_path: str):
         model_state_dict, epoch_losses = torch.load(model_path)
         self.model.load_state_dict(model_state_dict)
         self.epoch_losses = epoch_losses
+        print("Loaded trained model from cache with the saved epoch losses:")
+        for i, epoch_loss in enumerate(self.epoch_losses):
+            print(f"Epoch {i+1}, Loss: {epoch_loss}")
