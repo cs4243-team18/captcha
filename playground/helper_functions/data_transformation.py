@@ -45,7 +45,7 @@ def get_resized_img(char_image: np.ndarray) -> np.ndarray:
 """
 [Public] Data Transformation methods
 """
-def get_transformed_data(folder_path) -> tuple[np.ndarray, np.ndarray, list[str], np.ndarray, StandardScaler]:
+def get_transformed_data(folder_path, is_train) -> tuple[np.ndarray, np.ndarray, list[str], np.ndarray, StandardScaler]:
     """
     Denoise and tokenize captcha image files in a folder into individual characters using vertical projection.
     Ignores image files where segmentation has failed (num_of_segmented_char =/= actual_num_of_char).
@@ -65,7 +65,7 @@ def get_transformed_data(folder_path) -> tuple[np.ndarray, np.ndarray, list[str]
     X_imgs = []  # Character images
     X_features = []  # Engineered features for each character
     y = []  # Labels
-
+    desc = f"Preparing {'Train' if is_train else 'Test'} Data"
     for filename in tqdm(all_images, desc="Preparing Data"):
         img_path = os.path.join(folder_path, filename)
         filename_without_suffix = os.path.splitext(filename)[0]
@@ -106,8 +106,7 @@ def get_transformed_data(folder_path) -> tuple[np.ndarray, np.ndarray, list[str]
 
     # Transform y
     y = torch.tensor(y, dtype=torch.long)
-    y_one_hot = to_categorical(y, num_classes=len(CHARACTERS))
-
+    
     # Transform X_features and standardise
     features_df = pd.DataFrame(X_features)
     feature_names = list(features_df.columns)
@@ -116,7 +115,7 @@ def get_transformed_data(folder_path) -> tuple[np.ndarray, np.ndarray, list[str]
     scaler = StandardScaler()
     X_feature_vectors = scaler.fit_transform(feature_values).astype(np.float32)
     
-    return X_imgs, y_one_hot, feature_names, X_feature_vectors, scaler
+    return X_imgs, y, feature_names, X_feature_vectors, scaler
 
 
 def get_transformed_data_v2(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
