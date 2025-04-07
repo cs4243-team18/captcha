@@ -11,8 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 from .extract_features import extract_features
 from .preprocessing import preprocess_image_v1
-from .segmentation import segment_by_projection_v2
-from .segmentation import segment_by_projection_v1
+from .segmentation import segment_by_projection_v1, segment_by_projection_v1_with_padding, segment_by_projection_v2
 
 """
 Data Transformation methods which, after preprocessing and segmenting with methods from Phase 1 and 2 of the 
@@ -41,6 +40,85 @@ def to_categorical(y: list, num_classes) -> np.ndarray:
 
 def get_resized_img(char_image: np.ndarray) -> np.ndarray:
     return cv2.resize(char_image, (IMG_WIDTH, IMG_HEIGHT))
+
+def get_transformed_data_helper(folder_path, is_train, segmentation_function):
+    """
+    Segments input X based on segmentation_function (which takes in a list of captchas and returns a list of list of character images)
+    and returns (X,y) as tensors.
+    """
+    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+    X, y = [], []
+    desc = f"Preparing {'Train' if is_train else 'Test'} Data"
+    for filename in tqdm(filenames, desc=desc):
+        img_path = os.path.join(folder_path, filename)
+        filename_without_suffix = os.path.splitext(filename)[0]
+        correct_characters = filename_without_suffix.split('-')[0]
+
+        image = cv2.imread(img_path)
+        preprocessed_image = preprocess_image_v1(image)
+        char_imgs = segmentation_function([preprocessed_image])[0]
+
+        # Skip if segmentation failed
+        if len(char_imgs) != len(correct_characters):
+            continue
+
+        # Add every input character and its label to the (X,y) dataset
+        X.extend([get_resized_img(img) for img in char_imgs])
+        y.extend([CHARACTERS.index(char_label) for char_label in correct_characters])
+    
+    # Transform (X,y) to tensors for PyTorch
+    X = np.array(X, dtype=np.float32) / 255.0 # Normalize
+    X = np.expand_dims(X, axis=1) # Reshape to (N, 1, 40, 30) for CNN
+    X = torch.tensor(X, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.long)
+
+    return X, y
+
+def get_transformed_data_for_captcha_evaluation_helper(folder_path, segmentation_function) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
+    """
+    Rationale is to allow for evaluation of CAPTCHA performance now instead of just individual characters, which includes 
+    number of failed segmentations.
+    Now returns (X,y) with an additional layer of nesting for grouping character images and their labels for each CAPTCHA.
+    
+    Also segments based on segmentation_function (which takes in a list of captchas and returns a list of list of character images)
+    """
+    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+    X_test_captcha, y_test_captcha = [], []
+    num_failed_segmentations = 0
+    num_failed_chars = 0
+    
+    desc = f"Preparing Test Data for CAPTCHA Evaluation"
+    for filename in tqdm(filenames, desc=desc):
+        img_path = os.path.join(folder_path, filename)
+        filename_without_suffix = os.path.splitext(filename)[0]
+        correct_characters = filename_without_suffix.split('-')[0]
+
+        image = cv2.imread(img_path)
+        preprocessed_image = preprocess_image_v1(image)
+        char_imgs = segmentation_function([preprocessed_image])[0]
+
+        # Keep track of number of failed CAPTCHA segmentations
+        if len(char_imgs) != len(correct_characters):
+            num_failed_segmentations += 1
+            num_failed_chars += len(correct_characters)
+            continue
+
+        # Treat each CAPTCHA as a (X,y) dataset of character images and labels
+        X = [get_resized_img(img) for img in char_imgs]
+        y = [CHARACTERS.index(char_label) for char_label in correct_characters]
+
+        # Transform (X,y) for each CAPTCHA to tensors for PyTorch, and add them to X_test_captcha, y_test_captcha
+        X = np.array(X, dtype=np.float32) / 255.0 # Normalize
+        X = np.expand_dims(X, axis=1) # Reshape to (N, 1, 40, 30) for CNN
+        X = torch.tensor(X, dtype=torch.float32)
+        y = torch.tensor(y, dtype=torch.long)
+        X_test_captcha.append(X)
+        y_test_captcha.append(y)
+
+    return X_test_captcha, y_test_captcha, (num_failed_segmentations, num_failed_chars)
+
 
 """
 [Public] Data Transformation methods
@@ -119,77 +197,16 @@ def get_transformed_data(folder_path, is_train) -> tuple[np.ndarray, np.ndarray,
 
 
 def get_transformed_data_v2(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Similar to above but without feature extraction or one hot encoding, and returns (X,y) as tensors.
-    """
-    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    return get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1)
 
-    X, y = [], []
-    desc = f"Preparing {'Train' if is_train else 'Test'} Data"
-    for filename in tqdm(filenames, desc=desc):
-        img_path = os.path.join(folder_path, filename)
-        filename_without_suffix = os.path.splitext(filename)[0]
-        correct_characters = filename_without_suffix.split('-')[0]
 
-        image = cv2.imread(img_path)
-        preprocessed_image = preprocess_image_v1(image)
-        char_imgs = segment_by_projection_v1([preprocessed_image])[0]
-
-        # Skip if segmentation failed
-        if len(char_imgs) != len(correct_characters):
-            continue
-
-        # Add every input character and its label to the (X,y) dataset
-        X.extend([get_resized_img(img) for img in char_imgs])
-        y.extend([CHARACTERS.index(char_label) for char_label in correct_characters])
-    
-    # Transform (X,y) to tensors for PyTorch
-    X = np.array(X, dtype=np.float32) / 255.0 # Normalize
-    X = np.expand_dims(X, axis=1) # Reshape to (N, 1, 40, 30) for CNN
-    X = torch.tensor(X, dtype=torch.float32)
-    y = torch.tensor(y, dtype=torch.long)
-
-    return X, y
+def get_transformed_data_v2_with_padding(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
+    return get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1_with_padding)
 
 
 def get_transformed_data_for_captcha_evaluation(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
-    """
-    Rationale is to allow for evaluation of CAPTCHA performance now instead of just individual characters, which includes 
-    number of failed segmentations.
-    Now returns (X,y) with an additional layer of nesting for grouping character images and their labels for each CAPTCHA.
-    """
-    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    return get_transformed_data_for_captcha_evaluation_helper(folder_path, segment_by_projection_v1)
 
-    X_test_captcha, y_test_captcha = [], []
-    num_failed_segmentations = 0
-    num_failed_chars = 0
-    
-    desc = f"Preparing Test Data for CAPTCHA Evaluation"
-    for filename in tqdm(filenames, desc=desc):
-        img_path = os.path.join(folder_path, filename)
-        filename_without_suffix = os.path.splitext(filename)[0]
-        correct_characters = filename_without_suffix.split('-')[0]
 
-        image = cv2.imread(img_path)
-        preprocessed_image = preprocess_image_v1(image)
-        char_imgs = segment_by_projection_v1([preprocessed_image])[0]
-
-        # Keep track of number of failed CAPTCHA segmentations
-        if len(char_imgs) != len(correct_characters):
-            num_failed_segmentations += 1
-            num_failed_chars += len(correct_characters)
-            continue
-
-        # Treat each CAPTCHA as a (X,y) dataset of character images and labels
-        X = [get_resized_img(img) for img in char_imgs]
-        y = [CHARACTERS.index(char_label) for char_label in correct_characters]
-
-        # Transform (X,y) for each CAPTCHA to tensors for PyTorch, and add them to X_test_captcha, y_test_captcha
-        X = np.array(X, dtype=np.float32) / 255.0 # Normalize
-        X = np.expand_dims(X, axis=1) # Reshape to (N, 1, 40, 30) for CNN
-        X = torch.tensor(X, dtype=torch.float32)
-        y = torch.tensor(y, dtype=torch.long)
-        X_test_captcha.append(X)
-        y_test_captcha.append(y)
-
-    return X_test_captcha, y_test_captcha, (num_failed_segmentations, num_failed_chars)
+def get_transformed_data_for_captcha_evaluation_with_padding(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
+    return get_transformed_data_for_captcha_evaluation_helper(folder_path, segment_by_projection_v1_with_padding)
