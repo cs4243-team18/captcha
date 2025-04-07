@@ -32,16 +32,16 @@ IMG_WIDTH = 30
 """
 [Private] Data Transformation helpers
 """
-def to_categorical(y: list, num_classes) -> np.ndarray:
+def _to_categorical(y: list, num_classes) -> np.ndarray:
     '''
     Converts a list of integers to one-hot encoding
     '''
     return F.one_hot(y, num_classes=num_classes).numpy()  # Convert to numpy
 
-def get_resized_img(char_image: np.ndarray) -> np.ndarray:
+def _get_resized_img(char_image: np.ndarray) -> np.ndarray:
     return cv2.resize(char_image, (IMG_WIDTH, IMG_HEIGHT))
 
-def get_transformed_data_helper(folder_path, is_train, segmentation_function):
+def _get_transformed_data_helper(folder_path, is_train, segmentation_function):
     """
     Segments input X based on segmentation_function (which takes in a list of captchas and returns a list of list of character images)
     and returns (X,y) as tensors.
@@ -64,7 +64,7 @@ def get_transformed_data_helper(folder_path, is_train, segmentation_function):
             continue
 
         # Add every input character and its label to the (X,y) dataset
-        X.extend([get_resized_img(img) for img in char_imgs])
+        X.extend([_get_resized_img(img) for img in char_imgs])
         y.extend([CHARACTERS.index(char_label) for char_label in correct_characters])
     
     # Transform (X,y) to tensors for PyTorch
@@ -106,7 +106,7 @@ def get_transformed_data_for_captcha_evaluation_helper(folder_path, segmentation
             continue
 
         # Treat each CAPTCHA as a (X,y) dataset of character images and labels
-        X = [get_resized_img(img) for img in char_imgs]
+        X = [_get_resized_img(img) for img in char_imgs]
         y = [CHARACTERS.index(char_label) for char_label in correct_characters]
 
         # Transform (X,y) for each CAPTCHA to tensors for PyTorch, and add them to X_test_captcha, y_test_captcha
@@ -171,7 +171,7 @@ def get_transformed_data(folder_path, is_train) -> tuple[np.ndarray, np.ndarray,
             features = extract_features(char_image)
 
             # Add to dataset
-            X_imgs.append(get_resized_img(char_image))
+            X_imgs.append(_get_resized_img(char_image))
             X_features.append(features)
             y.append(CHARACTERS.index(char_label))
 
@@ -197,11 +197,11 @@ def get_transformed_data(folder_path, is_train) -> tuple[np.ndarray, np.ndarray,
 
 
 def get_transformed_data_v2(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
-    return get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1)
+    return _get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1)
 
 
 def get_transformed_data_v2_with_padding(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
-    return get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1_with_padding)
+    return _get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1_with_padding)
 
 
 def get_transformed_data_for_captcha_evaluation(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:

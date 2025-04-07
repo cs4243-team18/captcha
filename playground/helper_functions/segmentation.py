@@ -107,8 +107,6 @@ def segment_by_projection_v1_with_padding(binarised_imgs: list[np.ndarray]) -> L
             if char.shape[1] < int(min_width) else char
             for char in char_images
         ]
-        for img in char_images:
-            print(img.shape)
         all_char_images_vert_proj.append(char_images)
     return all_char_images_vert_proj
 
@@ -202,4 +200,4 @@ def evaluate_segmentation_accuracy_v2(folder_path):
     
     total_files = len(filenames)
     total_successful_segmentations = total_files - num_failed_segmentations
-    print(f"V2accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+    print(f"V2 accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
