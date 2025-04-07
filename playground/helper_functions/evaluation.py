@@ -5,10 +5,9 @@ import torch
 import torch.nn as nn
 import seaborn as sns
 import matplotlib.colors as mcolors
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, f1_score
 import json
 from helper_functions.data_transformation import CHARACTERS
-
 
 """
 [Public] Functions for evaluating the character and CAPTCHA performance of trained PyTorch models.
@@ -230,4 +229,33 @@ def evaluate_captcha_performance(
     print(f"Captcha level performance: {json.dumps(captcha_performance, indent=2)}\n")
     
 
-    
+def visualize_cnn_features(model, X, cols=16):
+    feature_maps = model.get_feature_maps(X)
+    for layer_name, feat_map in feature_maps.items():
+        batch_size = feat_map.shape[0]
+        num_filters = feat_map.shape[1]
+
+        for b in range(batch_size):
+            # Show original image first
+            if X is not None:
+                plt.figure(figsize=(1, 1))
+                img = X[b]
+                if img.shape[0] == 1:  # grayscale
+                    plt.imshow(img.squeeze().detach().cpu(), cmap='gray')
+                else:
+                    plt.imshow(img.permute(1, 2, 0).detach().cpu())
+                plt.title(f"Original Image {b}")
+                plt.axis('off')
+                plt.tight_layout()
+                plt.show()
+
+            # Then show the feature maps
+            rows = (num_filters + cols - 1) // cols
+            plt.figure(figsize=(int(cols * 0.7), rows))
+            for i in range(num_filters):
+                plt.subplot(rows, cols, i + 1)
+                plt.imshow(feat_map[b, i].detach().cpu(), cmap='viridis')
+                plt.axis('off')
+            plt.suptitle(f"{layer_name} | Image {b}")
+            plt.tight_layout()
+            plt.show()
