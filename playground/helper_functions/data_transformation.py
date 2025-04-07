@@ -41,6 +41,19 @@ def _to_categorical(y: list, num_classes) -> np.ndarray:
 def _get_resized_img(char_image: np.ndarray) -> np.ndarray:
     return cv2.resize(char_image, (IMG_WIDTH, IMG_HEIGHT))
 
+def _visualize_resized_imgs(char_imgs: list, correct_characters: str):
+        # Loop and display only images where char is 'o' or '0'
+        for i, char in enumerate(correct_characters):
+            if char in ['o', '0', '1', 'l', 'i']:
+                fig, a = plt.subplots(1, 2, figsize=(6,3))
+                a[0].imshow(char_imgs[i], cmap='gray')
+                a[0].set_title(f"original {char} from {''.join(correct_characters)}")
+                a[0].axis('off')
+                a[1].imshow(_get_resized_img(char_imgs[i]), cmap='gray')
+                a[1].set_title(f"resized")
+                a[1].axis('off')
+                plt.show()
+
 def _get_transformed_data_helper(folder_path, is_train, segmentation_function):
     """
     Segments input X based on segmentation_function (which takes in a list of captchas and returns a list of list of character images)
