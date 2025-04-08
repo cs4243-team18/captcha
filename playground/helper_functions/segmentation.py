@@ -138,6 +138,64 @@ def segment_by_projection_v2(image: np.ndarray, projection_threshold=0.1) -> lis
     
     return character_boundaries
 
+
+def segment_by_projection_v3(binarised_imgs: list[np.ndarray]) -> List[list[np.ndarray]]:
+    """
+    Given a list of binarised images, return a list of segmented characters for each binarised image
+    """
+    # Compute vertical projection (sum of pixel values along columns)
+    vertical_projs = [np.sum(binary, axis=0) for binary in binarised_imgs]
+
+    # Identify gap points (valleys where projection value is low), then derive horizontal segments of characters
+    thresholds = [np.max(vertical_proj) * 0.05 for vertical_proj in vertical_projs] # Adjust threshold as needed
+    all_x_gap_points = [np.where(vertical_proj < threshold)[0] for vertical_proj, threshold in zip(vertical_projs, thresholds)]
+    all_x_segments = []
+    for x_gap_points in all_x_gap_points:
+        x_segments = []
+        prev = 0
+        for point in x_gap_points:
+            if point - prev > 2:  # Adjust spacing threshold
+                x_segments.append((prev, point))
+            prev = point
+        all_x_segments.append(x_segments)
+
+    # Extract individual characters using bounding boxes
+    all_char_images_vert_proj = []
+    for x_segments, binary,  in zip(all_x_segments, binarised_imgs):
+        char_images = []
+        for start,end in x_segments:
+            img = binary[:, start:end+1]
+            # Compute horizontal projection (sum of pixel values along rows) to trim the vertical axis
+            horizontal_proj = np.sum(img, axis=1)
+            nonzero_indices = np.where(horizontal_proj > 0)[0]  # Find rows containing characters
+            if nonzero_indices.size == 0: continue
+            # Trim vertical
+            y_top, y_bottom = nonzero_indices[0], nonzero_indices[-1]
+            # Skip if img is just noise (if height is too small)
+            if img.shape[1] < 5:
+                continue
+            trimmed = img[y_top-3:y_bottom+3, :]  
+            # Pad if too thick or thin
+            min_height = 0.6 * (y_bottom - y_top)
+            min_width = 1.2 * (end - start)
+            if trimmed.shape[1] < min_height:
+                pad = int(min_height) - trimmed.shape[1]
+                pad_top = pad // 2
+                pad_bottom = pad - pad_top
+                trimmed = np.pad(trimmed, ((pad_top, pad_bottom), (0, 0)), mode='constant', constant_values=0)
+            if trimmed.shape[0] < min_width:
+                pad = int(min_width) - trimmed.shape[0]
+                pad_left = pad // 2
+                pad_right = pad - pad_left
+                trimmed = np.pad(trimmed, ((0, 0), (pad_left, pad_right)), mode='constant', constant_values=0)
+
+            char_images.append(trimmed)
+        # Remove any noise (> 94% zeros)
+        char_images = [char for char in char_images if not np.count_nonzero(char == 0) / char.size > 0.94]
+
+        all_char_images_vert_proj.append(char_images)
+    return all_char_images_vert_proj
+
 """
 [Public] Segmentation evaluation methods
 """

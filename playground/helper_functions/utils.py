@@ -38,7 +38,32 @@ def get_combined_char_imgs(char_imgs):
         char_imgs_with_spacing.append(spacing)
     return np.hstack(char_imgs_with_spacing)
 
+import numpy as np
 
-"""
-Evaluation functions
-"""
+def get_combined_char_imgs_v2(char_imgs):
+    # Find the max height among all char images
+    max_height = max(img.shape[0] for img in char_imgs)
+    
+    char_imgs_with_spacing = []
+    
+    for char_img in char_imgs:
+        h, w = char_img.shape
+        
+        # Pad each char_img to the same height (max_height)
+        pad_top = (max_height - h) // 2
+        pad_bottom = max_height - h - pad_top
+        padded_char_img = np.pad(char_img, ((pad_top, pad_bottom), (0, 0)), mode='constant', constant_values=255)  # Padding with white
+        
+        # Add the padded char_img to the list
+        char_imgs_with_spacing.append(padded_char_img)
+        
+        # Add the spacing (white area) after each image
+        spacing = np.ones_like(padded_char_img) * 255  # Same height as the image
+        char_imgs_with_spacing.append(spacing)
+    
+    # Remove the last spacing to avoid extra space at the end
+    if char_imgs_with_spacing:
+        char_imgs_with_spacing = char_imgs_with_spacing[:-1]
+
+    # Stack all the images horizontally
+    return np.hstack(char_imgs_with_spacing)
