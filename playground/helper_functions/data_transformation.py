@@ -11,8 +11,8 @@ from sklearn.preprocessing import StandardScaler
 
 from .extract_features import extract_features
 from .preprocessing import preprocess_image_v1
-from .segmentation import segment_by_projection_v1, segment_by_projection_v1_with_padding, segment_by_projection_v2, segment_by_projection_v3
-
+from .segmentation import segment_by_projection_v1, segment_by_projection_v1_proportionate, segment_by_projection_v1_with_padding, segment_by_projection_v2, segment_by_projection_v3
+from .segmentation import IMG_HEIGHT, IMG_WIDTH
 """
 Data Transformation methods which, after preprocessing and segmenting with methods from Phase 1 and 2 of the 
 pipeline, obtains the transformed (X,y) data for Phase 3 (training the CNN model to classify characters).
@@ -25,8 +25,6 @@ In this project,
 
 CHARACTERS = string.digits + string.ascii_lowercase
 PROJECTION_THRESHOLD = 0.1
-IMG_HEIGHT = 40
-IMG_WIDTH = 30
 
 
 """
@@ -211,6 +209,9 @@ def get_transformed_data(folder_path, is_train) -> tuple[np.ndarray, np.ndarray,
     return X_imgs, y, feature_names, X_feature_vectors, scaler
 
 
+def get_transformed_data_v1_proportionate(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
+    return _get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1_proportionate)
+
 def get_transformed_data_v2(folder_path, is_train) -> tuple[torch.Tensor, torch.Tensor]:
     return _get_transformed_data_helper(folder_path, is_train, segment_by_projection_v1)
 
@@ -222,6 +223,9 @@ def get_transformed_data_v3(folder_path, is_train) -> tuple[torch.Tensor, torch.
     return _get_transformed_data_helper(folder_path, is_train, segment_by_projection_v3)
 
 
+def get_transformed_data_for_captcha_evaluation_v1_proportionate(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
+    return get_transformed_data_for_captcha_evaluation_helper(folder_path, segment_by_projection_v1_proportionate)
+
 def get_transformed_data_for_captcha_evaluation(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
     return get_transformed_data_for_captcha_evaluation_helper(folder_path, segment_by_projection_v1)
 
@@ -231,3 +235,5 @@ def get_transformed_data_for_captcha_evaluation_with_padding(folder_path) -> tup
 
 def get_transformed_data_for_captcha_evaluation_v3(folder_path) -> tuple[list[torch.Tensor], list[torch.Tensor], tuple[int, int]]:
     return get_transformed_data_for_captcha_evaluation_helper(folder_path, segment_by_projection_v3)
+
+
