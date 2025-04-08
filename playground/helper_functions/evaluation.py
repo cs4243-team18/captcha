@@ -76,18 +76,9 @@ def evaluate_individual_character_performance(
 
     # Calculate per-character performance metrics
     # Note: The 'None' parameter for average returns scores for each class, instead of avg for all like in macro metrics
-    precision_per_char = precision_score(y_test, y_pred, average=None, labels=np.arange(NUM_CLASSES), zero_division=0)
     recall_per_char = recall_score(y_test, y_pred, average=None, labels=np.arange(NUM_CLASSES), zero_division=0)
+    precision_per_char = precision_score(y_test, y_pred, average=None, labels=np.arange(NUM_CLASSES), zero_division=0)
     f1_per_char = f1_score(y_test, y_pred, average=None, labels=np.arange(NUM_CLASSES), zero_division=0)
-    per_char_accuracy = [] # For per-character accuracy, need to calculate manually
-    for char_idx in range(NUM_CLASSES):
-        char_mask = (y_test == char_idx)
-        if np.sum(char_mask) > 0: 
-            correct_predictions = (y_pred[char_mask] == char_idx)
-            char_accuracy = np.mean(correct_predictions)
-            per_char_accuracy.append(char_accuracy)
-        else:
-            per_char_accuracy.append(0) 
     
     # Visualise confusion matrix heatmap
     print(f"Confusion matrix for individual characters (skipping SF):")
@@ -114,9 +105,9 @@ def evaluate_individual_character_performance(
         char = CHARACTERS[i]
         # Basic metrics
         per_character_metrics[char] = {
-            'accuracy': float(per_char_accuracy[i]),
+            # Note that accuracy = recall in this case (TP/TP+FN, where TP+FN = total samples)
+            'accuracy': float(recall_per_char[i]),
             'precision': float(precision_per_char[i]),
-            'recall': float(recall_per_char[i]),
             'f1_score': float(f1_per_char[i])
         }
         
@@ -169,7 +160,6 @@ def evaluate_individual_character_performance(
         "Total samples": [metrics["total_samples"] for metrics in sorted_confusion.values()],
         "Accuracy": [round(metrics["accuracy"], 2) for metrics in sorted_metrics.values()],
         "Precision": [round(metrics["precision"], 2) for metrics in sorted_metrics.values()],
-        "Recall": [round(metrics["recall"], 2) for metrics in sorted_metrics.values()],
         "F1-score": [round(metrics["f1_score"], 2) for metrics in sorted_metrics.values()],
     }
     df = pd.DataFrame(data)
