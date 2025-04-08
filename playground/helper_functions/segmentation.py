@@ -167,24 +167,23 @@ def segment_by_projection_v3(binarised_imgs: list[np.ndarray]) -> List[list[np.n
             img = binary[:, start:end+1]
             # Compute horizontal projection (sum of pixel values along rows) to trim the vertical axis
             horizontal_proj = np.sum(img, axis=1)
-            nonzero_indices = np.where(horizontal_proj > 0)[0]  # Find rows containing characters
+            nonzero_indices = np.where(horizontal_proj > 0)[0]
             if nonzero_indices.size == 0: continue
-            # Trim vertical
-            y_top, y_bottom = nonzero_indices[0], nonzero_indices[-1]
+            y_bottom, y_top = nonzero_indices[0], nonzero_indices[-1]
             # Skip if img is just noise (if height is too small)
-            if img.shape[1] < 5:
+            if img.shape[1] < 10:
                 continue
-            trimmed = img[y_top-3:y_bottom+3, :]  
+            trimmed = img[y_bottom-3:y_top+3, :]  
             # Pad if too thick or thin
-            min_height = 0.6 * (y_bottom - y_top)
-            min_width = 1.2 * (end - start)
-            if trimmed.shape[1] < min_height:
-                pad = int(min_height) - trimmed.shape[1]
+            min_height = 1.3 * (end - start)
+            min_width = 0.75 * (y_top - y_bottom)
+            if trimmed.shape[0] < min_height:
+                pad = int(min_height) - trimmed.shape[0]
                 pad_top = pad // 2
                 pad_bottom = pad - pad_top
                 trimmed = np.pad(trimmed, ((pad_top, pad_bottom), (0, 0)), mode='constant', constant_values=0)
-            if trimmed.shape[0] < min_width:
-                pad = int(min_width) - trimmed.shape[0]
+            if trimmed.shape[1] < min_width:
+                pad = int(min_width) - trimmed.shape[1]
                 pad_left = pad // 2
                 pad_right = pad - pad_left
                 trimmed = np.pad(trimmed, ((0, 0), (pad_left, pad_right)), mode='constant', constant_values=0)
