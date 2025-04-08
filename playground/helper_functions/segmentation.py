@@ -159,20 +159,32 @@ def segment_by_projection_v3(binarised_imgs: list[np.ndarray]) -> List[list[np.n
             prev = point
         all_x_segments.append(x_segments)
 
+    # Find min_y and max_y for each image
+    horizontal_projs = [np.sum(binary, axis=1) for binary in binarised_imgs]
+    all_y_bounds = []
+    for horizontal_proj in horizontal_projs:
+        nonzero_indices = np.where(horizontal_proj > 0)[0]  # Find rows containing characters
+        if nonzero_indices.size > 0:
+            min_y, max_y = max(0,nonzero_indices[0]-10), nonzero_indices[-1]+10
+        else:
+            min_y, max_y = 0, horizontal_proj.shape[0] - 1  # If the image is empty, keep full height
+        all_y_bounds.append((min_y, max_y))
+
     # Extract individual characters using bounding boxes
     all_char_images_vert_proj = []
-    for x_segments, binary,  in zip(all_x_segments, binarised_imgs):
+    for x_segments, binary, y_bounds in zip(all_x_segments, binarised_imgs, all_y_bounds):
         char_images = []
         for start,end in x_segments:
-            img = binary[:, start:end+1]
+            img = binary[y_bounds[0]:y_bounds[1]+1, start:end+1]
+            # Remove any noise (> 95% zeros)
+            if np.count_nonzero(img == 0) / img.size > 0.95:
+                continue
+
             # Compute horizontal projection (sum of pixel values along rows) to trim the vertical axis
             horizontal_proj = np.sum(img, axis=1)
             nonzero_indices = np.where(horizontal_proj > 0)[0]
             if nonzero_indices.size == 0: continue
             y_bottom, y_top = nonzero_indices[0], nonzero_indices[-1]
-            # Skip if img is just noise (if height is too small)
-            if img.shape[1] < 10:
-                continue
             trimmed = img[y_bottom-3:y_top+3, :]  
             # Pad if too thick or thin
             min_height = 1.3 * (end - start)
@@ -189,8 +201,6 @@ def segment_by_projection_v3(binarised_imgs: list[np.ndarray]) -> List[list[np.n
                 trimmed = np.pad(trimmed, ((0, 0), (pad_left, pad_right)), mode='constant', constant_values=0)
 
             char_images.append(trimmed)
-        # Remove any noise (> 94% zeros)
-        char_images = [char for char in char_images if not np.count_nonzero(char == 0) / char.size > 0.94]
 
         all_char_images_vert_proj.append(char_images)
     return all_char_images_vert_proj
@@ -198,63 +208,36 @@ def segment_by_projection_v3(binarised_imgs: list[np.ndarray]) -> List[list[np.n
 """
 [Public] Segmentation evaluation methods
 """
-def evaluate_segmentation_accuracy_v1(folder_path):
+
+def _evaluate_segmentation_accuracy(folder_path: str, segmentation_function, title: str):
     filenames = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
 
     num_failed_segmentations = 0
 
-    for filename in tqdm(filenames, desc="Evaluating Segmentation Accuracy for Vertical Projection V1"):
+    for filename in tqdm(filenames, desc=f"Evaluating Segmentation Accuracy for Vertical Projection {title}"):
         img_path = os.path.join(folder_path, filename)
         filename_without_suffix = os.path.splitext(filename)[0]
         correct_characters = filename_without_suffix.split('-')[0]
 
         image = cv2.imread(img_path)
         preprocessed_image = preprocess_image_v1(image)
-        char_images = segment_by_projection_v1([preprocessed_image])[0]
+        char_images = segmentation_function([preprocessed_image])[0]
 
         if len(char_images) != len(correct_characters):
             num_failed_segmentations += 1
     total_files = len(filenames)
     total_successful_segmentations = total_files - num_failed_segmentations
-    print(f"V1 accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+    print(f"{title} accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+
+
+def evaluate_segmentation_accuracy_v1(folder_path):
+    _evaluate_segmentation_accuracy(folder_path, segment_by_projection_v1, "V1")
 
 def evaluate_segmentation_accuracy_v1_with_padding(folder_path):
-    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
-
-    num_failed_segmentations = 0
-
-    for filename in tqdm(filenames, desc="Evaluating Segmentation Accuracy for Vertical Projection V1 with padding"):
-        img_path = os.path.join(folder_path, filename)
-        filename_without_suffix = os.path.splitext(filename)[0]
-        correct_characters = filename_without_suffix.split('-')[0]
-
-        image = cv2.imread(img_path)
-        preprocessed_image = preprocess_image_v1(image)
-        char_images = segment_by_projection_v1_with_padding([preprocessed_image])[0]
-
-        if len(char_images) != len(correct_characters):
-            num_failed_segmentations += 1
-    total_files = len(filenames)
-    total_successful_segmentations = total_files - num_failed_segmentations
-    print(f"V1 with padding accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+    _evaluate_segmentation_accuracy(folder_path, segment_by_projection_v1_with_padding, "V1 with Padding")
 
 def evaluate_segmentation_accuracy_v2(folder_path):
-    filenames = [f for f in os.listdir(folder_path) if f.lower().endswith('.png')]
+    _evaluate_segmentation_accuracy(folder_path, segment_by_projection_v2, "V2")
 
-    num_failed_segmentations = 0
-
-    for filename in tqdm(filenames, desc="Evaluating Segmentation Accuracy for Vertical Projection V2"):
-        img_path = os.path.join(folder_path, filename)
-        filename_without_suffix = os.path.splitext(filename)[0]
-        correct_characters = filename_without_suffix.split('-')[0]
-
-        image = cv2.imread(img_path)
-        preprocessed_image = preprocess_image_v1(image)
-        char_images = segment_by_projection_v2(preprocessed_image)
-
-        if len(char_images) != len(correct_characters):
-            num_failed_segmentations += 1
-    
-    total_files = len(filenames)
-    total_successful_segmentations = total_files - num_failed_segmentations
-    print(f"V2 accuracy: {total_successful_segmentations*100 / total_files} % ({total_successful_segmentations} out of {total_files})")
+def evaluate_segmentation_accuracy_v3(folder_path):
+    _evaluate_segmentation_accuracy(folder_path, segment_by_projection_v3, "V3")
