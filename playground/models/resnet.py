@@ -3,7 +3,7 @@ import torchvision.models as models
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset
-
+from tqdm import tqdm
 from typing import TypedDict, Tuple
 from helper_functions.data_transformation import CHARACTERS, IMG_HEIGHT, IMG_WIDTH
 from helper_functions.extract_features import NUM_ENGINEERED_FEATURES
@@ -61,7 +61,7 @@ class ResNet50(nn.Module):
         optimizer = optim.Adam(self.parameters(), lr=self.cnn_params['learning_rate'])  # Adam optimizer
         dataset = torch.utils.data.TensorDataset(X_train, y_train)
         train_loader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=self.cnn_params["batch_size"])
-        for epoch in range(self.cnn_params['num_epochs']):
+        for epoch in tqdm(range(self.cnn_params['num_epochs'])):
             running_loss = 0.0
             for images, labels in train_loader:
                 optimizer.zero_grad()  # Zero the gradients for the optimizer
