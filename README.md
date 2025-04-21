@@ -27,9 +27,9 @@ deactivate
 - For other important helper functions which can be used at any phase of the pipeline, such as for visualisation or evaluation metric functions, put them under `playground/helper_functions/utils` and do `from helper_functions.utils import *` at the start of all our notebooks so we don't have to repeat ourselves
 - For the main pipeline code which are our notebooks (any `.ipynb` files in `playground`), keep them as clean as possible so that it is more readable and maintainable, which makes it easier for other members to build new features on top of one another's work. For large changes, would be safer to work on a new branch and make a pull request for other members to review and resolve any file conflicts together instead
 
-# Poster
+# Poster (Methodology, results, limitations)
 
-Link: https://www.canva.com/design/DAGh2Wd0fYk/mDj0Nnjm045wxwGvwsSGjQ/edit?utm_content=DAGh2Wd0fYk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+Link: [https://www.canva.com/design/DAGh2Wd0fYk/mDj0Nnjm045wxwGvwsSGjQ/edit?utm_content=DAGh2Wd0fYk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton](https://www.canva.com/design/DAGh2Wd0fYk/mDj0Nnjm045wxwGvwsSGjQ/edit?utm_content=DAGh2Wd0fYk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 # Methodology to recognise CAPTCHAs
 
